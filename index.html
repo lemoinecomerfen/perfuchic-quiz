@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz Capilar — Perfuchic</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --black:#111;--white:#FAFAF8;--gl:#F0EFE9;--gm:#C8C6BC;--gd:#6B6860;
+  --ac:#C4A882;--ad:#8B6F47;--serif:'Playfair Display',Georgia,serif;
+  --sans:'DM Sans',system-ui,sans-serif;--r:3px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--white);color:var(--black);min-height:100vh;display:flex;flex-direction:column}
+.header{text-align:center;padding:1.6rem 1.5rem 1.2rem;border-bottom:1px solid var(--gl)}
+.logo-text{font-family:var(--serif);font-size:clamp(20px,5vw,30px);letter-spacing:.12em;font-weight:600}
+.logo-sub{font-size:11px;letter-spacing:.22em;color:var(--gd);text-transform:uppercase;margin-top:3px}
+.pw{padding:1rem 1.5rem 0;max-width:660px;margin:0 auto;width:100%}
+.pbb{height:2px;background:var(--gl);border-radius:2px;overflow:hidden}
+.pbf{height:100%;background:var(--ac);border-radius:2px;transition:width .5s cubic-bezier(.4,0,.2,1);width:0%}
+.pm{display:flex;justify-content:space-between;align-items:center;margin-top:6px}
+.pl{font-size:11px;color:var(--gd);letter-spacing:.06em}
+.pts{display:flex;gap:5px}
+.pt{font-size:10px;padding:3px 7px;border-radius:20px;letter-spacing:.05em}
+.pt.done{background:var(--black);color:var(--white)}
+.pt.active{background:var(--ac);color:var(--white)}
+.pt.pending{background:var(--gl);color:var(--gd)}
+main{flex:1;display:flex;flex-direction:column;align-items:center;padding:1.5rem 1.5rem 3rem}
+.screen{display:none;width:100%;max-width:660px;animation:fu .35s ease both}
+.screen.active{display:block}
+@keyframes fu{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+/* intro */
+.eyebrow{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--ad);margin-bottom:.6rem}
+.ititle{font-family:var(--serif);font-size:clamp(24px,5vw,38px);line-height:1.15;margin-bottom:.9rem}
+.ititle em{font-style:italic;color:var(--ad)}
+.idesc{font-size:14px;line-height:1.7;color:var(--gd);margin-bottom:1.8rem;font-weight:300}
+.stp{display:flex;border:1px solid var(--gm);border-radius:var(--r);overflow:hidden;margin-bottom:2rem}
+.sp{flex:1;padding:12px 10px;text-align:center;border-right:1px solid var(--gl)}
+.sp:last-child{border-right:none}
+.spn{font-size:9px;color:var(--ad);letter-spacing:.1em;margin-bottom:3px;font-weight:500}
+.spl{font-size:12px;color:var(--black);font-weight:500}
+.sps{font-size:10px;color:var(--gd);margin-top:2px}
+/* questions */
+.qstep{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ad);margin-bottom:.4rem}
+.qtitle{font-family:var(--serif);font-size:clamp(18px,4vw,26px);line-height:1.25;margin-bottom:.3rem}
+.qhint{font-size:13px;color:var(--gd);margin-bottom:.6rem;font-weight:300;line-height:1.5}
+.mh{font-size:12px;color:var(--ad);margin-bottom:.9rem;display:flex;align-items:center;gap:5px}
+.mh::before{content:'◇';font-size:10px}
+.opts{display:flex;flex-direction:column;gap:8px;margin-bottom:1.4rem}
+.ob{display:flex;align-items:center;gap:12px;padding:11px 14px;border:1px solid var(--gm);border-radius:var(--r);background:var(--white);cursor:pointer;text-align:left;transition:all .15s ease;font-family:var(--sans);font-size:14px;color:var(--black);font-weight:400;line-height:1.35}
+.ob:hover{border-color:var(--ac);background:#FBF8F4}
+.ob.selected{border-color:var(--black);background:var(--black);color:var(--white)}
+.oc{width:16px;height:16px;border:1.5px solid var(--gm);border-radius:50%;flex-shrink:0;position:relative;transition:all .15s}
+.ob.multi .oc{border-radius:3px}
+.oc::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:6px;height:6px;background:var(--black);border-radius:50%;opacity:0;transition:opacity .15s}
+.ob.multi.selected .oc::after{width:4px;height:8px;background:transparent;border-right:2px solid var(--black);border-bottom:2px solid var(--black);border-radius:0;transform:translate(-50%,-65%) rotate(45deg)}
+.ob.selected .oc{background:var(--white);border-color:var(--white)}
+.ob.selected .oc::after{background:var(--black);opacity:1}
+/* objetivo grid */
+.og{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:1.4rem}
+.oc2{border:1px solid var(--gm);border-radius:var(--r);padding:13px 12px;cursor:pointer;text-align:left;transition:all .15s ease;background:var(--white);font-family:var(--sans)}
+.oc2:hover{border-color:var(--ac);background:#FBF8F4}
+.oc2.selected{border-color:var(--black);background:var(--black)}
+.oc2.selected .on{color:var(--white)}
+.oc2.selected .od{color:var(--gm)}
+.on{font-size:13px;font-weight:500;color:var(--black);margin-bottom:2px}
+.od{font-size:11px;color:var(--gd);line-height:1.3}
+/* buttons */
+.bp{display:inline-block;padding:12px 24px;background:var(--black);color:var(--white);border:none;border-radius:var(--r);font-family:var(--sans);font-size:14px;font-weight:500;letter-spacing:.04em;cursor:pointer;transition:opacity .2s;text-decoration:none}
+.bp:hover{opacity:.82}
+.bp:disabled{opacity:.3;cursor:not-allowed}
+.bg{display:inline-flex;align-items:center;gap:5px;padding:10px 0;background:none;border:none;font-family:var(--sans);font-size:13px;color:var(--gd);cursor:pointer;transition:color .2s}
+.bg:hover{color:var(--black)}
+.bo{display:inline-block;padding:11px 20px;background:transparent;color:var(--black);border:1.5px solid var(--black);border-radius:var(--r);font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer;transition:all .2s;text-decoration:none}
+.bo:hover{background:var(--black);color:var(--white)}
+.nr{display:flex;align-items:center;justify-content:space-between;margin-top:.3rem}
+.tbadge{display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border:1px solid var(--gm);border-radius:20px;font-size:11px;color:var(--gd);margin-bottom:1.2rem}
+.tbadge strong{color:var(--black);font-weight:500}
+/* resultado */
+.res-tags{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:.7rem}
+.rtag{font-size:10px;padding:4px 11px;border-radius:20px;letter-spacing:.07em;text-transform:uppercase}
+.rtag.tipo{background:var(--gl);color:var(--gd)}
+.rtag.obj{background:var(--ac);color:var(--white)}
+/* rutina de 3 pasos */
+.rutina-title{font-family:var(--serif);font-size:clamp(18px,3.5vw,24px);margin-bottom:.3rem}
+.rutina-sub{font-size:13px;color:var(--gd);margin-bottom:1.4rem;font-weight:300}
+.paso{border:1px solid var(--gm);border-radius:6px;overflow:hidden;margin-bottom:10px;text-decoration:none;display:flex;transition:border-color .17s,transform .17s;background:var(--white);color:inherit}
+.paso:hover{border-color:var(--black);transform:translateY(-1px)}
+.paso-img{width:90px;min-width:90px;aspect-ratio:1;overflow:hidden;background:var(--gl);flex-shrink:0}
+.paso-img img{width:100%;height:100%;object-fit:cover;display:block}
+.paso-body{padding:12px 14px;flex:1;display:flex;flex-direction:column;justify-content:center}
+.paso-num{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--ad);margin-bottom:3px}
+.paso-name{font-size:14px;font-weight:500;color:var(--black);line-height:1.3;margin-bottom:3px}
+.paso-why{font-size:12px;color:var(--gd);line-height:1.4}
+.paso-arrow{font-size:18px;color:var(--gm);padding:0 14px;display:flex;align-items:center;flex-shrink:0}
+/* también podría interesarte */
+.pgrid-label{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--gd);margin-bottom:10px;margin-top:1.4rem}
+.pgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1.6rem}
+.pcard{border:1px solid var(--gl);border-radius:4px;overflow:hidden;background:var(--white);text-decoration:none;transition:border-color .17s,transform .17s;display:flex;flex-direction:column}
+.pcard:hover{border-color:var(--gm);transform:translateY(-2px)}
+.pcard-img{width:100%;aspect-ratio:1;background:var(--gl);overflow:hidden}
+.pcard-img img{width:100%;height:100%;object-fit:cover;display:block}
+.pcard-info{padding:6px 6px 8px}
+.pcard-name{font-size:10px;color:var(--black);line-height:1.3;font-weight:500}
+.ract{display:flex;flex-wrap:wrap;gap:9px;margin-bottom:.8rem}
+.scp{font-size:12px;color:var(--ad);margin-top:4px;display:none}
+@media(max-width:560px){
+  main{padding:1.2rem .9rem 2.5rem}
+  .og{grid-template-columns:1fr 1fr}
+  .ract{flex-direction:column}
+  .stp{flex-direction:column}
+  .sp{border-right:none;border-bottom:1px solid var(--gl)}
+  .sp:last-child{border-bottom:none}
+  .pgrid{grid-template-columns:repeat(2,1fr)}
+  .paso-img{width:72px;min-width:72px}
+}
+</style>
+</head>
+<body>
+<header class="header">
+  <div class="logo-text">PERFUCHIC</div>
+  <div class="logo-sub">Encontra tu rutina ideal</div>
+</header>
+<div class="pw" id="progressWrap" style="display:none">
+  <div class="pbb"><div class="pbf" id="progressFill"></div></div>
+  <div class="pm">
+    <span class="pl" id="progressLabel"></span>
+    <div class="pts">
+      <span class="pt pending" id="ptag-tipo">Tu pelo</span>
+      <span class="pt pending" id="ptag-obj">Tu objetivo</span>
+      <span class="pt pending" id="ptag-res">Rutina</span>
+    </div>
+  </div>
+</div>
+<main>
+
+<!-- INTRO -->
+<div class="screen active" id="screen-intro">
+  <p class="eyebrow">Tu cabello, tu rutina</p>
+  <h1 class="ititle">Descubri los productos <em>exactos para vos</em></h1>
+  <p class="idesc">Contestas algunas preguntas sobre tu cabello y tus objetivos. Te armamos una rutina personalizada de 3 pasos con los productos exactos del catalogo de Perfuchic.</p>
+  <div class="stp">
+    <div class="sp"><div class="spn">PASO 1</div><div class="spl">Tu cabello</div><div class="sps">Que tipo y como esta</div></div>
+    <div class="sp"><div class="spn">PASO 2</div><div class="spl">Tus objetivos</div><div class="sps">Que queres lograr</div></div>
+    <div class="sp"><div class="spn">RESULTADO</div><div class="spl">Tu rutina</div><div class="sps">3 productos exactos</div></div>
+  </div>
+  <button class="bp" onclick="startQuiz()">Empezar</button>
+</div>
+
+<!-- Q1: tipo de cabello -->
+<div class="screen" id="screen-q1">
+  <p class="qstep">Pregunta 1 de 4</p>
+  <h2 class="qtitle">¿Como es tu cabello de forma natural?</h2>
+  <div class="mh">Podes elegir mas de uno</div>
+  <div class="opts">
+    <button class="ob multi" onclick="selectMulti(this,'q1','lacio')"><span class="oc"></span><span>Lacio o casi lacio</span></button>
+    <button class="ob multi" onclick="selectMulti(this,'q1','ondas')"><span class="oc"></span><span>Tiene ondas suaves</span></button>
+    <button class="ob multi" onclick="selectMulti(this,'q1','rizos')"><span class="oc"></span><span>Rulos o rizos definidos</span></button>
+    <button class="ob multi" onclick="selectMulti(this,'q1','nose')"><span class="oc"></span><span>No se, depende del dia</span></button>
+  </div>
+  <div class="nr"><button class="bg" onclick="goBack()">Atras</button><button class="bp" id="btn-q1" disabled onclick="goNext('q1','screen-q2',1)">Siguiente</button></div>
+</div>
+
+<!-- Q2: estado actual -->
+<div class="screen" id="screen-q2">
+  <p class="qstep">Pregunta 2 de 4</p>
+  <h2 class="qtitle">¿Como esta tu cabello hoy?</h2>
+  <p class="qhint">Marca todo lo que aplique.</p>
+  <div class="mh">Podes elegir mas de uno</div>
+  <div class="opts">
+    <button class="ob multi" onclick="selectMulti(this,'q2','danado')"><span class="oc"></span><span>Da&#241;ado o maltratado por química o calor</span></button>
+    <button class="ob multi" onclick="selectMulti(this,'q2','seco')"><span class="oc"></span><span>Seco, sin humedad</span></button>
+    <button class="ob multi" onclick="selectMulti(this,'q2','opaco')"><span class="oc"></span><span>Opaco, le falta brillo</span></button>
+    <button class="ob multi" onclick="selectMulti(this,'q2','frizz')"><span class="oc"></span><span>Con frizz o rebeldia</span></button>
+    <button class="ob multi" onclick="selectMulti(this,'q2','caida')"><span class="oc"></span><span>Se me cae mucho</span></button>
+    <button class="ob multi" onclick="selectMulti(this,'q2','puntas')"><span class="oc"></span><span>Puntas abiertas o quebradas</span></button>
+    <button class="ob multi" onclick="selectMulti(this,'q2','normal')"><span class="oc"></span><span>Esta bien, quiero mantenerlo</span></button>
+  </div>
+  <div class="nr"><button class="bg" onclick="goBack()">Atras</button><button class="bp" id="btn-q2" disabled onclick="goNext('q2','screen-q3',2)">Siguiente</button></div>
+</div>
+
+<!-- Q3: quimica -->
+<div class="screen" id="screen-q3">
+  <p class="qstep">Pregunta 3 de 4</p>
+  <h2 class="qtitle">¿Tu cabello tuvo algun tratamiento químico?</h2>
+  <div class="mh">Podes elegir mas de uno</div>
+  <div class="opts">
+    <button class="ob multi" onclick="selectMulti(this,'q3','tintura')"><span class="oc"></span><span>Tintura o mechas</span></button>
+    <button class="ob multi" onclick="selectMulti(this,'q3','decoloracion')"><span class="oc"></span><span>Decoloración o aclarado / rubio</span></button>
+    <button class="ob multi" onclick="selectMulti(this,'q3','alisado')"><span class="oc"></span><span>Alisado o keratina</span></button>
+    <button class="ob multi" onclick="selectMulti(this,'q3','natural')"><span class="oc"></span><span>Ninguno, es natural</span></button>
+  </div>
+  <div class="nr"><button class="bg" onclick="goBack()">Atras</button><button class="bp" id="btn-q3" disabled onclick="goNext('q3','screen-q4',3)">Siguiente</button></div>
+</div>
+
+<!-- Q4: calor -->
+<div class="screen" id="screen-q4">
+  <p class="qstep">Pregunta 4 de 4</p>
+  <h2 class="qtitle">¿Con que frecuencia usas plancha o secador?</h2>
+  <div class="opts">
+    <button class="ob multi" onclick="selectMulti(this,'q4','siempre')"><span class="oc"></span><span>Casi todos los dias</span></button>
+    <button class="ob multi" onclick="selectMulti(this,'q4','seguido')"><span class="oc"></span><span>Varias veces por semana</span></button>
+    <button class="ob multi" onclick="selectMulti(this,'q4','rara')"><span class="oc"></span><span>Rara vez</span></button>
+    <button class="ob multi" onclick="selectMulti(this,'q4','nunca')"><span class="oc"></span><span>Nunca</span></button>
+  </div>
+  <div class="nr"><button class="bg" onclick="goBack()">Atras</button><button class="bp" id="btn-q4" disabled onclick="goToObjetivo()">Siguiente</button></div>
+</div>
+
+<!-- OBJETIVOS -->
+<div class="screen" id="screen-objetivo">
+  <div class="tbadge">Tu cabello: <strong id="tipo-display">-</strong></div>
+  <h2 class="qtitle">¿Que queres lograr?</h2>
+  <p class="qhint">Marca todos tus objetivos.</p>
+  <div class="mh">Podes elegir mas de uno</div>
+  <div class="og" id="obj-grid">
+    <div class="oc2 multi" onclick="selectObjMulti(this,'reparar')"><div class="on">Reparar y Nutrir</div><div class="od">Recuperar, fortalecer y dar vida</div></div>
+    <div class="oc2 multi" onclick="selectObjMulti(this,'brillo')"><div class="on">Brillo y Vitalidad</div><div class="od">Luminosidad e hidratación profunda</div></div>
+    <div class="oc2 multi" onclick="selectObjMulti(this,'rizos')"><div class="on">Definir rulos</div><div class="od">Definición y control</div></div>
+    <div class="oc2 multi" onclick="selectObjMulti(this,'antifrizz')"><div class="on">Anti-frizz</div><div class="od">Dominar la rebeldía</div></div>
+    <div class="oc2 multi" onclick="selectObjMulti(this,'color')"><div class="on">Proteger el color</div><div class="od">Que tu color dure más lavados</div></div>
+    <div class="oc2 multi" onclick="selectObjMulti(this,'vegano')"><div class="on">Cuidado consciente</div><div class="od">Vegano y sin química agresiva</div></div>
+    <div class="oc2 multi" onclick="selectObjMulti(this,'rubio')"><div class="on">Cuidar mi rubio</div><div class="od">Matizar, proteger el tono y eliminar reflejos</div></div>
+    <div class="oc2 multi" onclick="selectObjMulti(this,'proteger')"><div class="on">Proteger del calor</div><div class="od">Escudo térmico para plancha y secador</div></div>
+    <div class="oc2 multi" onclick="selectObjMulti(this,'styling')"><div class="on">Styling</div><div class="od">Fijar y moldear</div></div>
+  </div>
+  <div class="nr"><button class="bg" onclick="goBack()">Atras</button><button class="bp" id="btn-obj" disabled onclick="computeResult()">Ver mi rutina</button></div>
+</div>
+
+<!-- RESULTADO -->
+<div class="screen" id="screen-result">
+  <div class="res-tags" id="res-tags"></div>
+  <h2 class="rutina-title">Tu rutina personalizada</h2>
+  <p class="rutina-sub" id="rutina-sub"></p>
+  <div id="pasos-container"></div>
+  <p class="pgrid-label">Tambien podria interesarte</p>
+  <div class="pgrid" id="pgrid"></div>
+  <div class="ract">
+    <button class="bo" onclick="shareResult()">Compartir rutina</button>
+    <button class="bg" onclick="resetQuiz()" style="display:block;width:100%;text-align:center;margin-top:4px">Volver a empezar</button>
+  </div>
+  <p class="scp" id="share-copied">Copiado!</p>
+</div>
+
+</main>
+<script>
+/* ============================================================
+   CATALOGO DE PRODUCTOS
+   Cada producto: { name, why, url, img }
+   why = por que se recomienda (aparece bajo el nombre en el paso)
+============================================================ */
+var P = {
+  /* ── SHAMPOOS ─────────────────────────────────────── */
+  sh_rizos:      {name:'Shampoo Keratotal Rizos',         why:'Limpia sin resecar y activa la forma natural de tus rulos',          url:'https://perfuchic.com.ar/productos/shampoo-keratotal-rizos-bellissima-270ml/',          img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/bellissima-keratotal-rizos_familia-b8c5ecbdd5d50493c517740081128260-1024-1024.webp'},
+  sh_smoothing:  {name:'Shampoo Keratotal Smoothing',     why:'Mantiene el efecto del alisado y evita el quiebre',                  url:'https://perfuchic.com.ar/capilares/shampoo/bellissima/',          img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/bellissima-keratotal-smoothing_shampoo-270ml-996712080c4f244f0417740086445169-1024-1024.webp'},
+  sh_keratotal:  {name:'Shampoo Keratotal Bellissima',    why:'Repara y fortalece el cabello dañado por calor o quimica',           url:'https://perfuchic.com.ar/capilares/shampoo/bellissima/',          img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/bellissima-keratotal_shampoo-270ml-2e5e7b42da95d0d3ce17740082638228-1024-1024.webp'},
+  sh_colorfreeze:{name:'Shampoo BC Color Freeze',         why:'Sella el pigmento y prolonga el color hasta 30 lavados',             url:'https://perfuchic.com.ar/productos/shampoo-bc-micellar-color-freeze-ph-4-5-schwarzkopf-250ml/',        img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/silver1-5a8694e159e0971df716449540227375-1024-1024.webp'},
+  sh_silver:     {name:'Shampoo BC Silver Schwarzkopf',   why:'Neutraliza los amarillos y realza los tonos frios del rubio',        url:'https://perfuchic.com.ar/productos/shampo-bc-silver-color-freeze-ph-4-5-schwarzkopf-250ml/',        img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/silver1-5a8694e159e0971df716449540227375-1024-1024.webp'},
+  sh_iluminador: {name:'Shampoo Iluminador SDL Alfaparf',  why:'Ilumina y protege el color de los cabellos tenidos',                url:'https://perfuchic.com.ar/productos/shampoo-iluminador-semi-di-lino-alfaparf-250ml/',            img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/iluminating1-8a43a31f3e52fea99816451198619790-1024-1024.webp'},
+  sh_nutritivo:  {name:'Shampoo Nutritivo SDL Alfaparf',   why:'Limpieza suave que nutre la fibra capilar seca',                   url:'https://perfuchic.com.ar/productos/shampoo-nutritivo-semi-di-lino-alfaparf-250ml/',            img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/shampoo-nutritivo-editado1-6ea540f3997f6a2f0616069447278854-1024-10241-7115756adb697b800c16451196126011-1024-1024.webp'},
+  sh_reparative: {name:'Shampoo Reparative SDL Alfaparf',  why:'Repara y regenera el cabello dañado desde la primera lavada',      url:'https://perfuchic.com.ar/productos/low-shampoo-reparative-semi-di-lino-alfaparf-250ml/',            img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/shampoo-reparative11-9f886cc2780036d5ab16451204564637-1024-1024.webp'},
+  sh_sdl_smooth: {name:'Shampoo Smoothing SDL Alfaparf',   why:'Disciplina el cabello rebelde limpiando suavemente',               url:'https://perfuchic.com.ar/productos/low-shampoo-smoothing-semi-di-lino-alfaparf-250ml-km3eg/',            img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/shampoo-smoothing-copia-c05a17cafcd9916b7a17623720787171-1024-1024.webp'},
+  sh_coco:       {name:"Shampoo Coco Bomba Delfi's",       why:'Hidrata en profundidad sin sulfatos ni parabenos - 100% vegano',    url:'https://perfuchic.com.ar/productos/shampoo-delfis-coco-bomba-super-hidratacion-x-250-ml-linea-vegana/',img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/delfi_s-coco-bomba-9a2f808b3c575daa6d17740130961205-1024-1024.webp'},
+  sh_indomable:  {name:"Shampoo Locura Indomable Delfi's", why:'Controla el frizz desde la primera lavada - vegano y sin sulfatos', url:'https://perfuchic.com.ar/productos/shampoo-delfis-locura-indomable-antifrizz-x-250-ml-linea-vegana/',img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/familia-delfi_s-locura-indomable-ecdcfa8d06b33dc2b617740133135656-1024-1024.webp'},
+  sh_curvas:     {name:"Shampoo Curvas Peligrosas Delfi's",why:'Activa y define los rulos con aceite de jojoba - vegano',          url:'https://perfuchic.com.ar/productos/shampoo-delfis-curvas-peligrosas-rulos-definidos-x-250-ml-linea-vegana/',img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/familia-delfi_s-curvas-peligrosas-5419720f24a31be9f817740141479250-1024-1024.webp'},
+  sh_superstar:  {name:"Shampoo Super Star Delfi's",       why:'Aporta brillo intenso sin pesar el cabello - vegano',              url:'https://perfuchic.com.ar/productos/shampoo-delfis-super-star-brillo-intenso-x-250-ml-linea-vegana/',img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/familia-delfi_s-super-star-4bdc325978dce6804117740140128516-1024-1024.webp'},
+  sh_fid_argan:  {name:'Shampoo Argan Fidelite',           why:'Hidrata y aporta brillo con aceite de argan puro',                 url:'https://perfuchic.com.ar/productos/fidelite-shampoo-argan-x-260ml-hkem8/',            img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/4-a20d236569506b9a1817640733121753-1024-1024.webp'},
+  sh_fid_free:   {name:'Shampoo Free Fidelite',            why:'Formula libre de sulfatos, ideal para cabello fragil',             url:'https://perfuchic.com.ar/productos/fidelite-shampoo-free-x-230ml-snc46/',            img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/shampoo-free-230-0ef9594c9af1ff46f717641635688289-1024-1024.webp'},
+  sh_fid_ker:    {name:'Shampoo Keratina Fidelite',        why:'Refuerza la estructura del cabello con keratina activa',           url:'https://perfuchic.com.ar/productos/fidelite-shampoo-keratina-x-230ml-rjzwl/',            img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/shampoo-keratina-250-68edfcec407b462cf117641644495880-1024-1024.webp'},
+  sh_fid_color:  {name:'Shampoo Cabellos Tenidos Fidelite',why:'Protege el color y evita el decoloramiento prematuro',            url:'https://perfuchic.com.ar/productos/fidelite-caviar-shampoo-cabellos-tenidos-x-260ml-1j9qc/',            img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/shampoo-color-master-270-346261a8707da598dd17641643158471-1024-1024.webp'},
+  sh_fid_frizz:  {name:'Shampoo Kill Frizz Fidelite',     why:'Elimina el frizz y disciplina el cabello rebelde',                 url:'https://perfuchic.com.ar/productos/fidelite-kill-frizz-shampoo-x-230ml-27byp/',            img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/acondicionador-kill-frizz-230-714f5c57d4eed72cb717641639070031-1024-1024.webp'},
+  sh_fid_caviar: {name:'Shampoo Caviar Fidelite',          why:'Nutricion de lujo para cabello fino y sin volumen',                url:'https://perfuchic.com.ar/productos/fidelite-caviar-shampoo-cabellos-secos-y-castigados-x-260ml-vrtau/',            img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/shampoo-caviar-270-b7d8658a6c98536a3517641641103414-1024-1024.webp'},
+  sh_fid_secos:  {name:'Shampoo Cabellos Secos Fidelite',  why:'Hidratacion intensa para cabellos muy secos y castigados',        url:'https://perfuchic.com.ar/productos/fidelite-caviar-shampoo-cabellos-secos-y-castigados-x-260ml-vrtau/',            img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/caviar-shampoo-0e2075011d8c1ca64d17694546647210-1024-1024.webp'},
+
+  /* ── MASCARILLAS / TRATAMIENTOS ──────────────────── */
+  ma_karseell:   {name:'Mascarilla Karseell Colageno',     why:'Reconstruye la fibra capilar desde adentro con colageno activo',   url:'https://perfuchic.com.ar/productos/mascarilla-capilar-karseell-con-colageno-100-original/',        img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/karseel-con-insignia-41cac402b030a6bc2317671226277211-1024-1024.webp'},
+  ma_keratotal:  {name:'Mascarilla Keratotal Bellissima',  why:'Reparacion profunda con keratina para cabello dañado',             url:'https://perfuchic.com.ar/productos/mascarilla-keratotal-bellissima-500g/',      img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/bellissima-keratotal_mascarilla-500g-3d8123fb30d22b562117740083647248-1024-1024.webp'},
+  ma_sdl_ilum:   {name:'Mascarilla Iluminadora SDL Alfaparf',why:'Aporta brillo intenso y protege el color del cabello tenido',   url:'https://perfuchic.com.ar/productos/mascarilla-iluminadora-semi-di-lino-alfaparf-200ml/',        img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/illum-mask1-e0e51ece5d0fc47f8c16451200052471-1024-1024.webp'},
+  ma_sdl_nutri:  {name:'Mascarilla Nutritiva SDL Alfaparf', why:'Nutricion profunda para cabello seco que perdio vida',           url:'https://perfuchic.com.ar/productos/mascarilla-nutritiva-semi-di-lino-alfaparf-200ml/',        img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/mascara-nutritiva-editada1-9532e4dad8e685dd9216069456494088-1024-10241-4502a8baa4d83c3a3a16451196766010-1024-1024.webp'},
+  ma_sdl_rep:    {name:'Mascarilla Reparativa SDL Alfaparf',why:'Repara el daño químico y restaura la elasticidad del cabello',   url:'https://perfuchic.com.ar/productos/mascarilla-reparative-semi-di-lino-alfaparf-200ml/',        img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/mascara-verde-grande-editada1-5f3c6a24f58a760e7916111535291536-1024-102411-37c93093a010ef3b6f16451204001954-1024-1024.webp'},
+  ma_colorfreeze:{name:'Mascarilla BC Color Freeze',        why:'Sella el color y repara la porosidad del cabello tenido',        url:'https://perfuchic.com.ar/productos/mascarilla-bc-color-freeze-ph-4-5-schwarzkopf-200ml/',     img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/mascarilla-caviar-270-ae7c1b2ecfc1be21c617641639416664-1024-1024.webp'},
+  ma_silver:     {name:'Mascarilla BC Silver Schwarzkopf',  why:'Matiza los amarillos y nutre el cabello rubio o decolorado',     url:'https://perfuchic.com.ar/productos/mascarilla-bc-color-freeze-ph-4-5-schwarzkopf-200ml/',     img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/silver1-5a8694e159e0971df716449540227375-1024-1024.webp'},
+  ma_coco:       {name:"Mascarilla Coco Bomba Delfi's",     why:'Super hidratacion vegana con aceite de coco y miel',             url:'https://perfuchic.com.ar/productos/mascarilla-delfis-coco-bomba-super-hidratacion-x-250-ml-linea-vegana/',img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/delfi_s-coco-bomba_mascarilla-ec2dfc410cdb7ce8b517740130331463-1024-1024.webp'},
+  ma_indomable:  {name:"Mascarilla Locura Indomable Delfi's",why:'Ataca el frizz con karite y palta - formula vegana',           url:'https://perfuchic.com.ar/productos/mascarilla-delfis-locura-indomable-antifrizz-x-250-ml-linea-vegana/',img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/familia-delfi_s-locura-indomable-ecdcfa8d06b33dc2b617740133135656-1024-1024.webp'},
+  ma_curvas:     {name:"Mascarilla Curvas Peligrosas Delfi's",why:'Define y controla los rulos sin rigidez - vegana',            url:'https://perfuchic.com.ar/productos/mascarilla-delfis-curvas-peligrosas-rulos-definidos-x-250-ml-linea-vegana/',img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/familia-delfi_s-curvas-peligrosas-5419720f24a31be9f817740141479250-1024-1024.webp'},
+  ma_superstar:  {name:"Mascarilla Super Star Delfi's",     why:'Brillo intenso vegano con macadamia y papaya',                   url:'https://perfuchic.com.ar/productos/mascarilla-delfis-super-star-brillo-intenso-x-250-ml-linea-vegana/',img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/familia-delfi_s-super-star-4bdc325978dce6804117740140128516-1024-1024.webp'},
+  ma_ktk_desam:  {name:'Mascarilla Desamarilladora Keratotek',why:'Neutraliza los tonos amarillos en rubios y decolorados',      url:'https://perfuchic.com.ar/productos/mascarilla-desamarillador-keratotek-250g/',       img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/mascarilla-desamarilladora-eb4e0bb3d55f141d4617603650049050-1024-1024.webp'},
+  ma_ktk_detox:  {name:'Mascarilla Detox Keratotek',        why:'Limpieza profunda y restauracion de cabellos sobrecargados',     url:'https://perfuchic.com.ar/productos/mascarilla-detox-keratotek-250g/',       img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/detox-250gr1-044985f7b1accd3a8a16408758389602-1024-1024.webp'},
+  ma_ktk_bb:     {name:'Mascarilla BB Cream Keratotek',     why:'Tratamiento nutritivo 10 en 1 para todo tipo de cabello',        url:'https://perfuchic.com.ar/productos/mascarilla-bb-cream-keratotek-250g/',       img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/bb-cream-250gr1-4e03c76ef78423452916408757825741-1024-1024.webp'},
+  ma_ktk_caida:  {name:'Mascarilla Control Caida Keratotek',why:'Fortalece la raiz y reduce la caida con ortiga y arginina',     url:'https://perfuchic.com.ar/productos/mascarilla-control-caida-keratotek-250g/',       img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/control-caida-250gr1-f826f797dc8a49ff7916408757965476-1024-1024.webp'},
+  ma_fid_ker:    {name:'Mascarilla Keratina Fidelite',      why:'Refuerza y alisa la fibra capilar con keratina activa',          url:'https://perfuchic.com.ar/productos/fidelite-mascarilla-keratina-x-270ml-fah1d/',        img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/mascarilla-keratina-270-8094ca57ab0198731d17641643906223-1024-1024.webp'},
+  ma_fid_argan:  {name:'Mascarilla Argan Fidelite',         why:'Hidratacion y brillo con aceite de argan marroqui',             url:'https://perfuchic.com.ar/productos/fidelite-mascarilla-argan-x-250gr-n1keb/',        img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/5-7084cb7eef53f73af017640732000577-1024-1024.webp'},
+  ma_fid_free:   {name:'Mascarilla Free Fidelite',          why:'Sin sulfatos ni parabenos, ideal para cabello fragil y sensible',url:'https://perfuchic.com.ar/productos/fidelite-mascarilla-free-x-250gr-yqxks/',        img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/mascarilla-free-270-3615e658b5a718fabb17641635908734-1024-1024.webp'},
+
+  /* ── ACONDICIONADORES ────────────────────────────── */
+  ac_sdl_ilum:   {name:'Acondicionador Iluminador SDL Alfaparf',why:'Sella el color y aporta brillo espejo al cabello tenido',    url:'https://perfuchic.com.ar/productos/acondicionador-iluminador-diamond-x200ml-semi-di-lino-alfaparf-200ml/',    img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/semi_di_lino_diamond_illuminating_conditioner_pf016447_01-png-e4047b6457c6f7425517598422225677-1024-1024.webp'},
+  ac_bc_color:   {name:'Acondicionador BC Color Freeze',     why:'Hidrata y protege el pigmento del cabello tenido',              url:'https://perfuchic.com.ar/productos/acondicionador-bc-color-freeze-ph-4-5-schwarzkopf-200ml/', img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/spray1-7fa4fd5a144d0b1ee616449542163599-1024-1024.webp'},
+  ac_bc_silver:  {name:'Acondicionador BC Silver',           why:'Hidrata y realza los tonos frios del rubio',                   url:'https://perfuchic.com.ar/productos/acondicionador-bc-color-freeze-ph-4-5-schwarzkopf-200ml/', img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/silver1-5a8694e159e0971df716449540227375-1024-1024.webp'},
+  ac_rizos:      {name:'Acondicionador Keratotal Rizos',     why:'Hidrata y define los rulos sin pesarlos',                      url:'https://perfuchic.com.ar/productos/acondicionador-keratotal-rizos-bellissima-270ml/',  img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/bellissima-keratotal-rizos_acondicionador-270ml-b6d861f99580dfc5e317740084475971-1024-1024.webp'},
+  ac_smoothing:  {name:'Acondicionador Keratotal Smoothing', why:'Suaviza y prolonga el efecto del alisado',                     url:'https://perfuchic.com.ar/productos/acondicionador-keratotal-smoothing-270ml/',  img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/bellissima-keratotal-smoothing_acondicionador-270ml-dd0fe65199d930137117740086679818-1024-1024.webp'},
+  ac_coco:       {name:"Acondicionador Coco Bomba Delfi's",  why:'Desenreda y nutre con coco y miel - vegano',                   url:'https://perfuchic.com.ar/productos/acondicionador-delfis-coco-bomba-super-hidratacion-x-250-ml-linea-vegana/',img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/delfi_s-coco-bomba_acondicionador_perspectiva-ef08fbd6a4271c294117740130533975-1024-1024.webp'},
+  ac_indomable:  {name:"Acondicionador Locura Indomable Delfi's",why:'Hidrata y controla el frizz - vegano',                    url:'https://perfuchic.com.ar/productos/acondicionador-delfis-locura-indomable-antifrizz-x-250-ml-linea-vegana/',img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/delfi_s-locura-indomable_acondicionador_perspectiva-7b66fb1677a635f27f17740132892585-1024-1024.webp'},
+  ac_curvas:     {name:"Acondicionador Curvas Peligrosas Delfi's",why:'Define los rulos con jojoba y jazmin - vegano',           url:'https://perfuchic.com.ar/productos/acondicionador-delfis-curvas-peligrosas-rulos-definidos-x-250-ml-linea-vegana/',img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/delfi_s-curvas-peligrosas_acondicionador_perspectiva-d392a7fb6ec84a0dc917740140689081-1024-1024.webp'},
+  ac_superstar:  {name:"Acondicionador Super Star Delfi's",  why:'Brillo y nutricion sin peso - vegano',                         url:'https://perfuchic.com.ar/productos/acondicionador-delfis-super-star-brillo-intenso-x-250-ml-linea-vegana/',img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/delfi_s-super-star_acondicionador_perspectiva-be09ab180bda1209ff17740139499476-1024-1024.webp'},
+
+  /* ── FINALIZADORES / TRATAMIENTOS ────────────────── */
+  fi_amp_kera:   {name:'Ampollas Keratotal Bellissima',     why:'Tratamiento de choque semanal para cabello dañado',              url:'https://perfuchic.com.ar/productos/estuche-de-locion-keratotal-bellissima-x-12u-de-15ml/',        img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/bellissima-keratotal_estuche-x12u-locion-15ml-485cbf29aa05c1dca317740104865887-1024-1024.webp'},
+  fi_amp_kplex:  {name:'Ampollas Keraplex Bellissima',      why:'Reconstruye los puentes disulfuro del cabello muy danado',       url:'https://perfuchic.com.ar/productos/estuche-de-ampolla-keraplex-bellissima-x-12u-de-15ml/',        img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/bellissima-keraplex_estuche-x12-ampolla-shock-therapy-15ml_con-ampolla-608e327dbea83abbbb17740147831509-1024-1024.webp'},
+  fi_amp_argan:  {name:'Ampollas Argan y Macadamia',        why:'Hidratacion profunda semanal para cabello muy seco',             url:'https://perfuchic.com.ar/productos/estuche-de-locion-cremogena-argan-y-macadamia-bellissima-x-12u-de-15ml1/',        img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/bellissima-argan-y-macadamia_estuche-locion-x-12-_con-ampolla-96755c83c17512923117740129572486-1024-1024.webp'},
+  fi_amp_sdl:    {name:'Ampollas Semi Di Lino Alfaparf',    why:'Tratamiento intensivo para potenciar el brillo del color',       url:'https://perfuchic.com.ar/productos/ampolla-sublime-semi-di-lino-essential-oil-alfaparf-12-x-13ml/',          img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/ampolla-alfaparf-azul-8f3bb5d95af823c97d17617604674518-1024-1024.webp'},
+  fi_rep_puntas: {name:'Reparador de Puntas Bellissima',    why:'Sella y repara las puntas abiertas al instante',                url:'https://perfuchic.com.ar/productos/reparador-de-puntas-keratotal-bellissima-x-6u-de-40ml/',img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/bellissima-keratotal_estuche-x6u-reparador-de-puntas-40ml-a5a8b5ee4e4919b7fe17740103987193-1024-1024.webp'},
+  fi_oleo_maca:  {name:'Oleo Maca Karseell',                why:'Hidrata y sella la cutícula para un brillo natural',            url:'https://perfuchic.com.ar/productos/aceite-maca-karseell-essence-100-original/',           img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/mascara-keratotal-karsell-7e0eb6be02234d4d0817603585989776-1024-1024.webp'},
+  fi_kit_argan:  {name:'Kit Argan y Macadamia Bellissima',  why:'Nutricion e hidratacion profunda con argan y macadamia',        url:'https://perfuchic.com.ar/productos/kit-argan-y-macadamia-promo-bellissima-rf066/',                     img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/bellissima-argan-y-macadamia-kit-5-e93651b121b68434a817768008847262-1024-1024.webp'},
+  fi_prot_bell:  {name:'Fluido Termoprotector Bellissima',  why:'Protege la fibra capilar del calor hasta 220 grados',          url:'https://perfuchic.com.ar/productos/fluido-termoprotector-keratotal-bellissima-125ml/',img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/bellissima-keratotal_fluido-termoprotector-125ml-59164317376dbe30c317740087696800-1024-1024.webp'},
+  fi_prot_fid:   {name:'Protector Termico Fidelite',        why:'Escudo termico que evita el daño por plancha o secador',        url:'https://perfuchic.com.ar/productos/fidelite-protector-termico-argan-x-120ml-ldthh/',img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/protector-termico-argan-6f6df22c3b9a49aed617641641652412-1024-1024.webp'},
+  fi_serum_bell: {name:'Serum Keratotal Bellissima',        why:'Sella la cuticula y aporta brillo intenso como finalizador',   url:'https://perfuchic.com.ar/productos/serum-keratotal-bellissima-120g/',           img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/bellissima-keratotal_serum-120g-6a603929ef29a1b78a17740084187187-1024-1024.webp'},
+  fi_serum_ktk:  {name:'Serum SOS Keratotek',               why:'Tratamiento reparador intensivo para cabello muy danado',       url:'https://perfuchic.com.ar/productos/tratamiento-capilar-s-o-s-keratotek-120gr/',            img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/grupo-21-919775cf2cdfc8f76a16448664992720-1024-1024.webp'},
+  fi_fid_argan:  {name:'Aceite Argan Fidelite',             why:'Brillo y nutricion con argan puro como finalizador diario',    url:'https://perfuchic.com.ar/productos/fidelite-mythical-elixir-oil-argan-x-120ml-yoy1h/',           img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/12-af5294a0a741d6da5e17640731773124-1024-1024.webp'},
+
+  /* ── LINEA RUBIOS / MATIZ / KERAPLEX ────────────────────── */
+  sh_blonde:     {name:'Shampoo Keratotal Blonde Bellissima',  why:'Cuida la estructura delicada del cabello rubio o aclarado',      url:'https://perfuchic.com.ar/productos/shampoo-keratotal-blonde-bellissima-270ml/',         img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/bellissima-keratotal-blonde_shampoo-270ml-9dc4ca9ffbe3f6301917740143962164-1024-1024.webp'},
+  sh_keraplex:   {name:'Shampoo Keraplex N°3 Bellissima',      why:'Refuerza los puentes estructurales tras decoloración o aclarado', url:'https://perfuchic.com.ar/productos/shampoo-n3-keraplex-bellissima-270ml/',                img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/bellissima-keraplex_shampoo-270ml-13d1c28e53d0c5daf217740146506516-1024-1024.webp'},
+  ma_blonde:     {name:'Mascarilla Keratotal Blonde Bellissima',why:'Nutre e ilumina el cabello rubio minimizando la porosidad',     url:'https://perfuchic.com.ar/productos/mascarilla-keratotal-blonde-bellissima-250g/',        img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/bellissima-keratotal-blonde_mascarilla-250g-c117734b4f7a8a07a417740088436244-1024-1024.webp'},
+  ma_keraplex:   {name:'Mascarilla N°5 Keraplex Bellissima',   why:'Reconstruye desde adentro la fibra dañada por procesos agresivos',url:'https://perfuchic.com.ar/productos/mascarilla-n5-keraplex-bellissima-250g/',             img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/bellissima-keraplex_mascarilla-250g-8e4d92fedae6ba970a17740146681547-1024-1024.webp'},
+  ac_blonde:     {name:'Acondicionador Keratotal Blonde',       why:'Hidrata y cuida la fibra delicada del rubio en cada lavado',     url:'https://perfuchic.com.ar/productos/acondicionador-keratotal-blonde-bellissima-270ml/',   img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/bellissima-keratotal-blonde_acondicionador-270ml-cc7fb6babd9ec0e01817740084749471-1024-1024.webp'},
+  ac_keraplex:   {name:'Acondicionador N°4 Keraplex Bellissima',why:'Sella y fortalece la fibra luego del shampoo reconstructor',   url:'https://perfuchic.com.ar/productos/acondicionador-n4-keraplex-bellissima-270ml/',       img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/bellissima-keraplex_acondicionador-270ml-719036072c223791be17740146330845-1024-1024.webp'},
+  fi_bond_sealer:{name:'Bond Sealer N°2 Keraplex Bellissima',  why:'Estabiliza los puentes y sella la fibra tras el tratamiento',   url:'https://perfuchic.com.ar/productos/bond-sealer-n2-keraplex-bellissima-270ml/',          img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/bellissima-keraplex_bond-sealer-270ml-b28a97238370cb159c17740147122165-1024-1024.webp'},
+  fi_ktk_desam:  {name:'Mascarilla Desamarilladora Keratotek', why:'Neutraliza los amarillos y realza los tonos fríos del rubio',    url:'https://perfuchic.com.ar/productos/mascarilla-desamarillador-keratotek-250g/',          img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/mascarilla-desamarilladora-eb4e0bb3d55f141d4617603650049050-1024-1024.webp'},
+  fi_antifrizz:  {name:'Anti-Frizz Schwarzkopf BC Oil',     why:'Controla el encrespamiento y da brillo sin pesar',             url:'https://perfuchic.com.ar/productos/serum-osis-magic-cera-antifrizz-schwarzkopf-50ml/',        img:'https://acdn-us.mitiendanube.com/stores/001/952/975/products/portada-7fe3d65bcbf10b6eb917721357614424-1024-1024.webp'}
+};
+
+/* ============================================================
+   MOTOR DE RUTINAS
+   Dado el perfil del usuario devuelve { paso1, paso2, paso3 }
+   Cada paso es una clave de P (producto)
+============================================================ */
+function buildRutina(tipo, estado, quimica, calor, objetivos) {
+  var t=tipo,e=estado,q=quimica,c=calor,o=objetivos;
+  var has=function(arr,v){return arr.indexOf(v)>=0};
+
+  /* — Perfil del cabello — */
+  var isRizo       = has(t,'rizos');
+  var isOndas      = has(t,'ondas');
+  var isLacio      = has(t,'lacio')||has(t,'nose');
+  var isDanado     = has(e,'danado');
+  var isSeco       = has(e,'seco');
+  var isOpaco      = has(e,'opaco');
+  var isFrizz      = has(e,'frizz');
+  var isCaida      = has(e,'caida');
+  var isPuntas     = has(e,'puntas');
+  var isNormal     = has(e,'normal');
+  var isTintura    = has(q,'tintura');
+  var isDecolor    = has(q,'decoloracion');
+  var isAlisado    = has(q,'alisado');
+  var isNatural    = has(q,'natural');
+  var usaCalor     = has(c,'siempre')||has(c,'seguido');
+  var calNunca     = has(c,'nunca')||has(c,'rara');
+
+  /* — Objetivos — */
+  var oRep         = has(o,'reparar');
+  var oBrillo      = has(o,'brillo');
+  var oRizos       = has(o,'rizos');
+  var oAF          = has(o,'antifrizz');
+  var oColor       = has(o,'color');
+  var oProt        = has(o,'proteger');
+  var oVegano      = has(o,'vegano');
+  var oRubio       = has(o,'rubio');
+  var oStyling     = has(o,'styling');
+
+  var paso1,paso2,paso3;
+
+  /* ════════════════════════════════════════════
+     PASO 1 — SHAMPOO
+     Lógica: química > tipo de pelo > estado > objetivo
+     Cada producto se asigna según su función real,
+     no solo por el objetivo declarado.
+  ════════════════════════════════════════════ */
+
+  /* Rubios — mezcla silver (matizar) + blonde (cuidar tono) + keraplex (tintura con plex) */
+  if(oRubio && isDecolor && isDanado)  paso1='sh_keraplex'; /* decolorado muy dañado: keraplex */
+  else if(oRubio && isDecolor)         paso1='sh_silver';   /* decolorado: silver neutraliza amarillos */
+  else if(oRubio && isTintura)         paso1='sh_keraplex'; /* tintura + rubio: keraplex protege y fortalece */
+  else if(oRubio)                      paso1='sh_blonde';   /* rubio sin química: blonde cuida el tono */
+
+  /* Química: decoloración */
+  else if(isDecolor && !oVegano) paso1='sh_silver';
+
+  /* Tintura: según objetivo secundario */
+  else if(isTintura && oColor && isDecolor) paso1='sh_keraplex'; /* teñido decolorado + proteger: keraplex */
+  else if(isTintura && oColor)   paso1='sh_colorfreeze';
+  else if(isTintura && oBrillo)  paso1='sh_iluminador';
+  else if(isTintura && oRep)     paso1='sh_reparative';
+  else if(isTintura)             paso1='sh_colorfreeze';
+
+  /* Alisado/keratina */
+  else if(isAlisado && isFrizz)  paso1='sh_fid_frizz';  /* Kill Frizz controla frizz post-alisado */
+  else if(isAlisado && oAF)      paso1='sh_sdl_smooth';  /* Smoothing SDL disciplina sin sulfatos */
+  else if(isAlisado)             paso1='sh_smoothing';   /* Keratotal Smoothing prolonga el efecto */
+
+  /* Rizos — Delfi's Curvas sirve para rizos naturales igual que Keratotal Rizos */
+  else if(isRizo && oVegano)     paso1='sh_curvas';      /* Curvas Peligrosas: aceite de jojoba, define rulos */
+  else if(isRizo && oRizos)      paso1='sh_rizos';       /* Keratotal Rizos: provit B5 + keratina */
+  else if(isRizo && oAF)         paso1='sh_indomable';   /* Locura Indomable: controla frizz en rizos */
+  else if(isRizo && isSeco)      paso1='sh_coco';        /* Coco Bomba: hidratación profunda en rizos secos */
+  else if(isRizo)                paso1='sh_rizos';
+
+  /* Frizz — Delfi's Locura Indomable funciona igual que shampoos sin sulfatos para frizz */
+  else if(isFrizz && oVegano)    paso1='sh_indomable';
+  else if(isFrizz && oAF)        paso1='sh_fid_frizz';   /* Kill Frizz Fidelité: específico para frizz */
+  else if(isFrizz && isAlisado)  paso1='sh_sdl_smooth';
+  else if(isFrizz)               paso1='sh_sdl_smooth';
+
+  /* Seco — distintas opciones según origen de la sequedad */
+  else if(isSeco && oVegano)     paso1='sh_coco';        /* Coco Bomba: miel + coco, hidratación vegana */
+  else if(isSeco && isTintura)   paso1='sh_fid_color';   /* Caviar Teñidos: cuida color + hidrata */
+  else if(isSeco && oRep)        paso1='sh_fid_secos';   /* Caviar Secos: anti-age para muy secos */
+  else if(isSeco && oBrillo)     paso1='sh_fid_argan';   /* Argán Fidelité: hidrata + aporta brillo */
+  else if(isSeco)                paso1='sh_nutritivo';   /* Nutritivo SDL: limpieza suave nutritiva */
+
+  /* Dañado sin química */
+  else if(isDanado && oRep)      paso1='sh_reparative';  /* Reparative SDL: reconstruye fibra */
+  else if(isDanado)              paso1='sh_keratotal';   /* Keratotal: repara + fortalece */
+
+  /* Opaco */
+  else if(isOpaco && oBrillo)    paso1='sh_iluminador';  /* Iluminador SDL: brillo espejo */
+  else if(isOpaco && oVegano)    paso1='sh_superstar';   /* Super Star: macadamia + papaya, brillo vegano */
+  else if(isOpaco)               paso1='sh_fid_argan';   /* Argán Fidelité: aporta brillo */
+
+  /* Caída */
+  else if(isCaida)               paso1='sh_fid_ker';     /* Keratina Fidelité: fortalece raíz */
+
+  /* Ondas naturales */
+  else if(isOndas && oRizos)     paso1='sh_curvas';      /* Curvas Peligrosas define ondas */
+  else if(isOndas && isSeco)     paso1='sh_coco';
+  else if(isOndas && isFrizz)    paso1='sh_indomable';
+
+  /* Objetivo brillo sin condicionantes */
+  else if(oBrillo && oVegano)    paso1='sh_superstar';
+  else if(oBrillo)               paso1='sh_iluminador';
+
+  /* Objetivo vegano sin otro condicionante */
+  else if(oVegano)               paso1='sh_superstar';
+
+  else                           paso1='sh_keratotal';
+
+  /* ════════════════════════════════════════════
+     PASO 2 — MASCARILLA / TRATAMIENTO
+     Idem: función real del producto primero
+  ════════════════════════════════════════════ */
+
+  /* Rubios — mascarilla según estado del cabello */
+  if(oRubio && isDecolor && isDanado)   paso2='ma_keraplex';  /* Keraplex: reconstruye fibra decolorada */
+  else if(oRubio && isDecolor)          paso2='ma_ktk_desam'; /* Desamarilladora: neutraliza amarillos */
+  else if(oRubio && isTintura)          paso2='ma_keraplex';  /* Tintura + rubio: keraplex fortalece */
+  else if(oRubio && isSeco)             paso2='ma_blonde';    /* Rubio seco: blonde nutre e ilumina */
+  else if(oRubio)                       paso2='ma_blonde';    /* Rubio natural: blonde cuida el tono */
+
+  /* Decoloración */
+  else if(isDecolor && isDanado) paso2='ma_karseell';    /* Karseell colágeno: reconstrucción profunda */
+  else if(isDecolor && oVegano)  paso2='ma_coco';        /* Coco Bomba: hidrata sin químicos */
+  else if(isDecolor)             paso2='ma_silver';      /* BC Silver: matiza + nutre decolorado */
+
+  /* Tintura */
+  else if(isTintura && oColor && isDanado) paso2='ma_sdl_rep'; /* Reparativa SDL: repara + preserva color */
+  else if(isTintura && oColor)   paso2='ma_colorfreeze'; /* Color Freeze: sella pigmento */
+  else if(isTintura && oBrillo)  paso2='ma_sdl_ilum';    /* Iluminadora SDL: brillo espejo en teñido */
+  else if(isTintura && isDanado) paso2='ma_sdl_rep';
+  else if(isTintura && oVegano)  paso2='ma_superstar';   /* Super Star: brillo vegano, apta teñidos naturales */
+  else if(isTintura)             paso2='ma_sdl_ilum';
+
+  /* Alisado */
+  else if(isAlisado && isDanado) paso2='ma_fid_ker';     /* Keratina Fidelité: refuerza fibra post-alisado */
+  else if(isAlisado && isFrizz)  paso2='ma_fid_ker';
+  else if(isAlisado && oVegano)  paso2='ma_indomable';   /* Locura Indomable: controla frizz + vegana */
+  else if(isAlisado)             paso2='ma_fid_ker';
+
+  /* Rizos — Delfi's Curvas funciona igual que Mascarilla Rizos para rulos */
+  else if(isRizo && oVegano)     paso2='ma_curvas';      /* Curvas Peligrosas: define + hidrata rizos */
+  else if(isRizo && oRizos && isDanado) paso2='ma_karseell'; /* Karseell: reconstruye el rizo dañado */
+  else if(isRizo && oRizos)      paso2='ma_curvas';
+  else if(isRizo && isSeco)      paso2='ma_coco';        /* Coco Bomba: hidratación intensa rizos secos */
+  else if(isRizo && isFrizz)     paso2='ma_indomable';   /* Locura Indomable: antifrizz en rizos */
+  else if(isRizo)                paso2='ma_keratotal';
+
+  /* Dañado */
+  else if(isDanado && oRep && isSeco)  paso2='ma_karseell';  /* Karseell: reconstrucción + hidratación */
+  else if(isDanado && oRep)      paso2='ma_sdl_rep';     /* Reparativa SDL: reconstruye la fibra */
+  else if(isDanado && oVegano)   paso2='ma_coco';        /* Coco Bomba: nutre sin sulfatos */
+  else if(isDanado)              paso2='ma_karseell';
+
+  /* Seco */
+  else if(isSeco && oVegano)     paso2='ma_coco';        /* Coco Bomba: hidratación profunda vegana */
+  else if(isSeco && oRep)        paso2='ma_sdl_nutri';   /* Nutritiva SDL: nutrición profunda */
+  else if(isSeco && oBrillo)     paso2='ma_fid_argan';   /* Argán Fidelité: hidrata + aporta brillo */
+  else if(isSeco)                paso2='ma_fid_argan';
+
+  /* Frizz */
+  else if(isFrizz && oVegano)    paso2='ma_indomable';   /* Locura Indomable: karite + palta, vegana */
+  else if(isFrizz && isDanado)   paso2='ma_ktk_bb';      /* BB Cream Keratotek: nutre + controla frizz */
+  else if(isFrizz)               paso2='ma_indomable';
+
+  /* Opaco */
+  else if(isOpaco && oBrillo && oVegano) paso2='ma_superstar'; /* Super Star: brillo vegano intenso */
+  else if(isOpaco && oBrillo)    paso2='ma_sdl_ilum';    /* Iluminadora SDL: brillo espejo */
+  else if(isOpaco)               paso2='ma_ktk_bb';      /* BB Cream: nutritiva 10 en 1 */
+
+  /* Caída */
+  else if(isCaida)               paso2='ma_ktk_caida';   /* Control Caída Keratotek: ortiga + arginina */
+
+  /* Objetivo puro reparar/nutrir */
+  else if(oRep && oVegano)       paso2='ma_coco';
+  else if(oRep)                  paso2='ma_ktk_bb';      /* BB Cream: nutritiva multiuso */
+
+  /* Objetivo brillo */
+  else if(oBrillo && oVegano)    paso2='ma_superstar';
+  else if(oBrillo)               paso2='ma_sdl_ilum';
+
+  else if(oVegano)               paso2='ma_superstar';
+  else                           paso2='ma_keratotal';
+
+  /* ════════════════════════════════════════════
+     PASO 3 — FINALIZADOR
+     Criterio: estado físico del cabello + calor + objetivo
+  ════════════════════════════════════════════ */
+
+  /* Puntas: siempre el reparador de puntas primero */
+  if(isPuntas && usaCalor)               paso3='fi_rep_puntas'; /* puntas + calor: reparar y proteger */
+  else if(isPuntas)                      paso3='fi_rep_puntas';
+
+
+  /* Rubio: finalizar con desamarillador o termoprotector según uso de calor */
+  else if(oRubio && usaCalor)            paso3='fi_prot_bell';  /* rubio + calor: proteger primero */
+  else if(oRubio && isDecolor && isDanado) paso3='fi_bond_sealer'; /* decolorado muy dañado: Bond Sealer */
+  else if(oRubio)                        paso3='fi_ktk_desam';  /* rubio: desamarillador sella el tono */
+
+  /* Calor frecuente — termoprotector siempre */
+  else if(usaCalor && oVegano)           paso3='fi_prot_fid';   /* Protector Fidelité: sin sulfatos */
+  else if(usaCalor)                      paso3='fi_prot_bell';  /* Termoprotector Bellissima hasta 220° */
+
+  /* Decoloración muy dañada: Keraplex */
+  else if(isDecolor && isDanado)         paso3='fi_amp_kplex';  /* Ampollas Keraplex: reconstruye puentes */
+  else if(isDecolor && isSeco)           paso3='fi_amp_argan';  /* Argán + Macadamia: hidrata decolorado */
+  else if(isDecolor)                     paso3='fi_amp_argan';
+
+  /* Tintura: ampollas SDL sellan el brillo del color */
+  else if(isTintura && oBrillo)          paso3='fi_amp_sdl';
+  else if(isTintura && isDanado)         paso3='fi_amp_kera';   /* Ampollas Keratotal: choque de reparación */
+  else if(isTintura)                     paso3='fi_amp_sdl';
+
+  /* Alisado: serum sella sin interferir */
+  else if(isAlisado && isFrizz)          paso3='fi_antifrizz';  /* Anti-frizz BC Oil: control sin peso */
+  else if(isAlisado)                     paso3='fi_serum_bell'; /* Serum Keratotal: prolonga el alisado */
+
+  /* Rizos: según estado */
+  else if(isRizo && oVegano && isSeco)   paso3='fi_oleo_maca';  /* Oleo Maca: sella rizo sin parabenos */
+  else if(isRizo && isDanado)            paso3='fi_amp_kera';
+  else if(isRizo && oRizos)              paso3='fi_serum_bell'; /* Serum: define y sella el rizo */
+  else if(isRizo && isFrizz)             paso3='fi_antifrizz';
+  else if(isRizo)                        paso3='fi_oleo_maca';
+
+  /* Frizz sin química */
+  else if(isFrizz && oVegano)            paso3='fi_oleo_maca';  /* Oleo Maca: sella cutícula natural */
+  else if(isFrizz || oAF)                paso3='fi_antifrizz';
+
+  /* Seco */
+  else if(isSeco && oVegano)             paso3='fi_oleo_maca';
+  else if(isSeco && isDanado)            paso3='fi_amp_argan';  /* Argán + Macadamia: hidratación + reparación */
+  else if(isSeco && oRep)                paso3='fi_amp_argan';
+  else if(isSeco)                        paso3='fi_kit_argan';  /* Kit Argán: tratamiento completo */
+
+  /* Dañado */
+  else if(isDanado && oRep)              paso3='fi_amp_kera';
+  else if(isDanado)                      paso3='fi_serum_ktk';  /* SOS Keratotek: reparación intensiva */
+
+  /* Opaco */
+  else if(isOpaco && oBrillo)            paso3='fi_fid_argan';  /* Aceite Argán Fidelité: brillo y nutrición */
+  else if(isOpaco)                       paso3='fi_serum_bell';
+
+  /* Caída */
+  else if(isCaida)                       paso3='fi_serum_ktk';  /* SOS Keratotek: fortalece raíz */
+
+  /* Brillo puro */
+  else if(oBrillo && oVegano)            paso3='fi_oleo_maca';
+  else if(oBrillo)                       paso3='fi_fid_argan';
+
+  else if(oVegano)                       paso3='fi_oleo_maca';
+  else                                   paso3='fi_serum_bell';
+
+  return {paso1:paso1, paso2:paso2, paso3:paso3};
+}
+
+/* ════════════════════════════════════════════
+   POOL CONTEXTUAL — "También podría interesarte"
+   En lugar de aleatorio, selecciona productos
+   relacionados con el perfil del usuario.
+════════════════════════════════════════════ */
+function getContextPool(tipo, estado, quimica, calor, objetivos, usados) {
+  var t=tipo,e=estado,q=quimica,c=calor,o=objetivos;
+  var has=function(arr,v){return arr.indexOf(v)>=0};
+  var isRizo    = has(t,'rizos')||has(t,'ondas');
+  var isDanado  = has(e,'danado');
+  var isSeco    = has(e,'seco');
+  var isFrizz   = has(e,'frizz');
+  var isPuntas  = has(e,'puntas');
+  var isCaida   = has(e,'caida');
+  var isOpaco   = has(e,'opaco');
+  var isTintura = has(q,'tintura');
+  var isDecolor = has(q,'decoloracion');
+  var isAlisado = has(q,'alisado');
+  var usaCalor  = has(c,'siempre')||has(c,'seguido');
+  var oVegano   = has(o,'vegano');
+  var oRep      = has(o,'reparar');
+  var oBrillo   = has(o,'brillo');
+  var oRizos    = has(o,'rizos');
+  var oAF       = has(o,'antifrizz');
+  var oColor    = has(o,'color');
+  var oRubio    = has(o,'rubio');
+
+  /* Armar candidatos según perfil */
+  var candidates = [];
+  var add = function(k) { if(usados.indexOf(k)<0 && P[k]) candidates.push(k); };
+
+  /* Acondicionadores relacionados */
+  if(oRubio)                           { add('ac_blonde'); add('ac_keraplex'); add('ac_bc_silver'); }
+  if(oRubio && isDecolor)              { add('fi_bond_sealer'); add('fi_ktk_desam'); }
+  if(isDecolor && !oRubio)             { add('ac_bc_silver'); add('fi_amp_kplex'); add('fi_amp_argan'); }
+  if(isTintura && oColor)              { add('ac_bc_color'); add('ac_sdl_ilum'); add('fi_amp_sdl'); }
+  if(isTintura && oBrillo)             { add('ac_sdl_ilum'); add('fi_amp_sdl'); }
+  if(isAlisado)                        { add('ac_smoothing'); add('fi_serum_bell'); add('fi_antifrizz'); }
+  if(isRizo && oVegano)                { add('ac_curvas'); add('ac_coco'); add('fi_oleo_maca'); }
+  if(isRizo && !oVegano)               { add('ac_rizos'); add('fi_serum_bell'); add('ma_curvas'); }
+  if(isFrizz && oVegano)               { add('ac_indomable'); add('fi_oleo_maca'); }
+  if(isFrizz && !oVegano)              { add('fi_antifrizz'); add('ac_smoothing'); }
+  if(isSeco && oVegano)                { add('ac_coco'); add('fi_oleo_maca'); add('fi_amp_argan'); }
+  if(isSeco && !oVegano)               { add('fi_amp_argan'); add('fi_kit_argan'); add('ac_sdl_ilum'); }
+  if(isDanado && oRep)                 { add('fi_amp_kera'); add('fi_serum_ktk'); add('fi_amp_kplex'); }
+  if(isDanado)                         { add('fi_serum_ktk'); add('ma_ktk_bb'); }
+  if(usaCalor)                         { add('fi_prot_bell'); add('fi_prot_fid'); }
+  if(isPuntas)                         { add('fi_rep_puntas'); add('fi_serum_bell'); }
+  if(isCaida)                          { add('ma_ktk_caida'); add('fi_serum_ktk'); }
+  if(isOpaco && oBrillo)               { add('fi_fid_argan'); add('fi_oleo_maca'); add('ac_sdl_ilum'); }
+  if(oBrillo && !isOpaco)              { add('fi_fid_argan'); add('fi_serum_bell'); }
+  if(oVegano)                          { add('ac_superstar'); add('ma_superstar'); add('fi_oleo_maca'); }
+
+  /* Completar con productos variados si hay menos de 4 */
+  var fallback=['fi_serum_bell','fi_oleo_maca','fi_amp_argan','fi_rep_puntas',
+                'ma_ktk_bb','ac_rizos','fi_fid_argan','fi_antifrizz','fi_kit_argan'];
+  for(var i=0;i<fallback.length&&candidates.length<6;i++){
+    if(usados.indexOf(fallback[i])<0 && candidates.indexOf(fallback[i])<0 && P[fallback[i]])
+      candidates.push(fallback[i]);
+  }
+
+  /* Deduplicar y devolver los primeros 4 */
+  var seen={}, unique=[];
+  for(var j=0;j<candidates.length;j++){
+    if(!seen[candidates[j]]){seen[candidates[j]]=1;unique.push(candidates[j]);}
+  }
+  return unique.slice(0,4);
+}
+
+/* ============================================================
+   ESTADO Y NAVEGACION
+============================================================ */
+var S={multi:{},objetivos:[],tipoPelo:[],history:[],step:0,currentScreen:'screen-intro'};
+var TL={lacio:'Lacio',ondas:'Con ondas',rizos:'Con rulos',nose:'Variable'};
+var OL={reparar:'Reparar y Nutrir',brillo:'Brillo y Vitalidad',rizos:'Definir rulos',antifrizz:'Anti-frizz',color:'Proteger el color',proteger:'Proteger del calor',styling:'Styling',vegano:'Cuidado consciente',rubio:'Cuidar mi rubio'};
+
+function showScreen(id){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active')});document.getElementById(id).classList.add('active');S.currentScreen=id;window.scrollTo({top:0,behavior:'smooth'})}
+function push(from){S.history.push(from)}
+function goBack(){if(!S.history.length)return;showScreen(S.history.pop());updateProgress()}
+function startQuiz(){document.getElementById('progressWrap').style.display='block';S.step=1;updateProgress();push('screen-intro');showScreen('screen-q1')}
+function updateProgress(){
+  var t=6,p=Math.min((S.step/t)*100,100);
+  document.getElementById('progressFill').style.width=p+'%';
+  document.getElementById('progressLabel').textContent='Paso '+Math.min(S.step,t)+' de '+t;
+  var iT=S.step<=4,iO=S.step===5,iR=S.step>=6;
+  st('ptag-tipo',iT?'active':(iO||iR?'done':'pending'));
+  st('ptag-obj',iO?'active':(iR?'done':'pending'));
+  st('ptag-res',iR?'active':'pending');
+}
+function st(id,v){document.getElementById(id).className='pt '+v}
+
+function selectMulti(btn,key,val){
+  if(!S.multi[key])S.multi[key]=[];
+  btn.classList.toggle('selected');
+  var i=S.multi[key].indexOf(val);
+  i===-1?S.multi[key].push(val):S.multi[key].splice(i,1);
+  var nb=document.getElementById('btn-'+key);
+  if(nb)nb.disabled=S.multi[key].length===0;
+}
+
+function selectObjMulti(card,val){
+  if(!S.multi['obj'])S.multi['obj']=[];
+  card.classList.toggle('selected');
+  var i=S.multi['obj'].indexOf(val);
+  i===-1?S.multi['obj'].push(val):S.multi['obj'].splice(i,1);
+  document.getElementById('btn-obj').disabled=S.multi['obj'].length===0;
+}
+
+function goNext(key,nextScreen,stepNum){
+  if(!S.multi[key]||!S.multi[key].length)return;
+  push(S.currentScreen);S.step=stepNum+1;updateProgress();showScreen(nextScreen);
+}
+
+function goToObjetivo(){
+  push(S.currentScreen);S.step=5;updateProgress();
+  var tipos=(S.multi['q1']||[]).map(function(v){return TL[v]||v});
+  document.getElementById('tipo-display').textContent=tipos.join(' + ')||'-';
+  showScreen('screen-objetivo');
+}
+
+function computeResult(){
+  if(!S.multi['obj']||!S.multi['obj'].length)return;
+  var rutina=buildRutina(
+    S.multi['q1']||[],
+    S.multi['q2']||[],
+    S.multi['q3']||[],
+    S.multi['q4']||[],
+    S.multi['obj']||[]
+  );
+  renderResult(rutina);
+}
+
+function renderResult(rutina){
+  /* tags */
+  var tipos=(S.multi['q1']||[]).map(function(v){return TL[v]||v}).join(', ');
+  var objs=(S.multi['obj']||[]).map(function(v){return OL[v]||v}).join(', ');
+  document.getElementById('res-tags').innerHTML=
+    (tipos?'<span class="rtag tipo">'+tipos+'</span>':'')+
+    (objs?'<span class="rtag obj">'+objs+'</span>':'');
+
+  /* subtitulo */
+  document.getElementById('rutina-sub').textContent='Basado en tu perfil, estos son los 3 productos que necesita tu cabello.';
+
+  /* pasos */
+  var pasos=[
+    {key:rutina.paso1, num:'Paso 1', label:'Lavar'},
+    {key:rutina.paso2, num:'Paso 2', label:'Tratar'},
+    {key:rutina.paso3, num:'Paso 3', label:'Finalizar'}
+  ];
+  var container=document.getElementById('pasos-container');
+  container.innerHTML=pasos.map(function(p){
+    var prod=P[p.key];
+    if(!prod)return '';
+    return '<a class="paso" href="'+prod.url+'" target="_blank">'+
+      '<div class="paso-img"><img src="'+prod.img+'" alt="'+prod.name+'" loading="lazy" onerror="this.parentNode.style.background=\'#eee\'"></div>'+
+      '<div class="paso-body">'+
+        '<div class="paso-num">'+p.num+' — '+p.label+'</div>'+
+        '<div class="paso-name">'+prod.name+'</div>'+
+        '<div class="paso-why">'+prod.why+'</div>'+
+      '</div>'+
+      '<div class="paso-arrow">&#8594;</div>'+
+      '</a>';
+  }).join('');
+
+  /* grilla "tambien podria interesarte" — productos relacionados con el perfil */
+  var usados=[rutina.paso1,rutina.paso2,rutina.paso3];
+  var four=getContextPool(
+    S.multi['q1']||[], S.multi['q2']||[], S.multi['q3']||[],
+    S.multi['q4']||[], S.multi['obj']||[], usados
+  );
+  document.getElementById('pgrid').innerHTML=four.map(function(k){
+    var prod=P[k];
+    return '<a class="pcard" href="'+prod.url+'" target="_blank">'+
+      '<div class="pcard-img"><img src="'+prod.img+'" alt="'+prod.name+'" loading="lazy" onerror="this.parentNode.style.background=\'#eee\'"></div>'+
+      '<div class="pcard-info"><div class="pcard-name">'+prod.name+'</div></div>'+
+      '</a>';
+  }).join('');
+
+  S.step=6;updateProgress();push(S.currentScreen);showScreen('screen-result');
+}
+
+function hashStr(s){var h=0;for(var i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h=h&h;}return h}
+function seededShuffle(arr,seed){var a=arr.slice(),n=a.length;for(var i=n-1;i>0;i--){seed=(seed*1664525+1013904223)&0xffffffff;var j=((seed>>>0)%(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a}
+
+function shareResult(){
+  var tipos=(S.multi['q1']||[]).map(function(v){return TL[v]||v}).join(', ');
+  var objs=(S.multi['obj']||[]).map(function(v){return OL[v]||v}).join(', ');
+  var names=Array.from(document.querySelectorAll('.paso-name')).map(function(el){return el.textContent}).join(' | ');
+  var txt='Hice el quiz capilar de Perfuchic\nMi cabello: '+tipos+'\nMis objetivos: '+objs+'\nMi rutina: '+names+'\nDescubri la tuya en https://perfuchic.com.ar';
+  if(navigator.clipboard){navigator.clipboard.writeText(txt).then(function(){var el=document.getElementById('share-copied');el.style.display='block';setTimeout(function(){el.style.display='none'},2500)})}
+  else{prompt('Copia:',txt)}
+}
+
+function resetQuiz(){
+  S.multi={};S.objetivos=[];S.tipoPelo=[];S.history=[];S.step=0;
+  document.getElementById('progressWrap').style.display='none';
+  document.getElementById('progressFill').style.width='0%';
+  document.querySelectorAll('.ob,.oc2').forEach(function(b){b.classList.remove('selected')});
+  document.querySelectorAll('[id^="btn-"]').forEach(function(b){if(b.tagName==='BUTTON')b.disabled=true});
+  showScreen('screen-intro');
+}
+</script>
+</body>
+</html>
